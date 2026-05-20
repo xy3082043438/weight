@@ -58,7 +58,7 @@ export function AuthForm({ error }: { error?: string }) {
           <div>
             <h1 className="text-2xl font-semibold tracking-normal">体重记录</h1>
             <p className="mt-2 text-sm text-muted-foreground">
-              登录后记录个人体重和体脂，数据按账号独立保存。
+              登录后记录个人体重，数据按账号独立保存。
             </p>
           </div>
         </div>
