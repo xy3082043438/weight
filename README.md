@@ -1,4 +1,4 @@
-# Weight
+# 体重记录
 
 一个基于 Next.js、shadcn/ui 风格组件和 PostgreSQL 的体重记录可视化网站，内置账号密码登录注册，按用户隔离体重数据。
 

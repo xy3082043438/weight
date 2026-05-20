@@ -146,7 +146,7 @@ export function WeightDashboard({ entries, stats, user, error }: Props) {
             <div className="space-y-2">
               <Badge variant="secondary" className="w-fit gap-1.5">
                 <Scale className="h-3.5 w-3.5" />
-                weight
+                体重记录
               </Badge>
               <div>
                 <h1 className="text-2xl font-semibold tracking-normal sm:text-3xl">

@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Weight Tracker",
-  description: "A responsive weight recording and visualization app.",
+  title: "体重记录",
+  description: "响应式体重记录与趋势可视化网站。",
 };
 
 export default function RootLayout({

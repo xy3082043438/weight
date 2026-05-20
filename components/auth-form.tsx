@@ -51,7 +51,7 @@ export function AuthForm({ error }: { error?: string }) {
         <div className="space-y-3 text-center">
           <Badge variant="secondary" className="mx-auto gap-1.5">
             <Activity className="h-3.5 w-3.5" />
-            weight
+            体重记录
           </Badge>
           <div>
             <h1 className="text-2xl font-semibold tracking-normal">体重记录</h1>
