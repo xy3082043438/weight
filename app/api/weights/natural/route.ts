@@ -1,0 +1,128 @@
+import { NextResponse } from "next/server";
+import { z } from "zod";
+import { createAiChatCompletion } from "@/lib/ai";
+import { getCurrentUser } from "@/lib/auth";
+import { getWeightStats, listWeightEntries, upsertWeightEntry } from "@/lib/weight";
+import {
+  getAbnormalWeightWarning,
+  maxWeightKg,
+  minWeightKg,
+} from "@/lib/weight-validation";
+
+export const dynamic = "force-dynamic";
+
+const naturalInputSchema = z.object({
+  text: z.string().trim().min(1).max(500),
+  confirmAbnormal: z.boolean().optional(),
+});
+
+const parsedEntrySchema = z.object({
+  measuredAt: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  weightKg: z.coerce.number().min(minWeightKg).max(maxWeightKg),
+  note: z.string().max(500).nullable().optional(),
+});
+
+function todayInShanghai() {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Shanghai",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date());
+}
+
+function extractJson(content: string) {
+  const fenced = content.match(/```(?:json)?\s*([\s\S]*?)```/i);
+  const source = fenced?.[1] ?? content;
+  const start = source.indexOf("{");
+  const end = source.lastIndexOf("}");
+
+  if (start === -1 || end === -1 || end <= start) {
+    throw new Error("AI response did not contain JSON");
+  }
+
+  return JSON.parse(source.slice(start, end + 1)) as unknown;
+}
+
+export async function POST(request: Request) {
+  try {
+    const user = await getCurrentUser();
+    if (!user) {
+      return NextResponse.json({ message: "请先登录。" }, { status: 401 });
+    }
+
+    const { text, confirmAbnormal } = naturalInputSchema.parse(await request.json());
+    const currentDate = todayInShanghai();
+    const aiContent = await createAiChatCompletion([
+      {
+        role: "system",
+        content: [
+          "你是体重记录解析器，只输出 JSON，不要输出解释。",
+          "从用户的中文口语输入中提取体重记录。",
+          "返回格式必须是：{\"measuredAt\":\"YYYY-MM-DD\",\"weightKg\":72.4,\"note\":\"备注或null\"}",
+          "日期缺省时使用当前日期。今天、昨天、前天等相对日期以 Asia/Shanghai 当前日期为准。",
+          "体重单位默认 kg。备注只保留与饮食、运动、状态、测量时间相关的信息。",
+          "如果无法识别体重，返回：{\"error\":\"无法识别体重\"}",
+        ].join("\n"),
+      },
+      {
+        role: "user",
+        content: `当前日期：${currentDate}\n用户输入：${text}`,
+      },
+    ]);
+
+    const parsed = extractJson(aiContent);
+    if (
+      typeof parsed === "object" &&
+      parsed !== null &&
+      "error" in parsed
+    ) {
+      return NextResponse.json(
+        { message: String(parsed.error || "无法识别体重。") },
+        { status: 400 },
+      );
+    }
+
+    const entryInput = parsedEntrySchema.parse(parsed);
+    const existingEntries = await listWeightEntries(user.id);
+    const warning = getAbnormalWeightWarning({
+      entries: existingEntries,
+      measuredAt: entryInput.measuredAt,
+      weightKg: entryInput.weightKg,
+    });
+    if (warning && !confirmAbnormal) {
+      return NextResponse.json(
+        {
+          code: "ABNORMAL_WEIGHT_DELTA",
+          message: `本次体重比上次记录变化 ${Math.abs(warning.delta).toFixed(1)} kg，请确认输入无误。`,
+          warning,
+          parsed: entryInput,
+        },
+        { status: 409 },
+      );
+    }
+
+    const entry = await upsertWeightEntry({
+      userId: user.id,
+      measuredAt: entryInput.measuredAt,
+      weightKg: entryInput.weightKg,
+      note: entryInput.note ?? null,
+    });
+    const entries = await listWeightEntries(user.id);
+
+    return NextResponse.json({
+      entry,
+      parsed: entryInput,
+      entries,
+      stats: getWeightStats(entries),
+    });
+  } catch (error) {
+    console.error(error);
+    const message =
+      error instanceof Error && error.message === "Missing SILICONFLOW_API_KEY"
+        ? "缺少 SILICONFLOW_API_KEY 环境变量。"
+        : `口语录入解析失败，体重需在 ${minWeightKg}-${maxWeightKg} kg 之间。`;
+
+    return NextResponse.json({ message }, { status: 400 });
+  }
+}

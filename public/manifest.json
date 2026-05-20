@@ -1,0 +1,19 @@
+{
+  "name": "体重记录",
+  "short_name": "体重记录",
+  "description": "每日体重记录、趋势分析和目标管理。",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f4f8fb",
+  "theme_color": "#0f766e",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
