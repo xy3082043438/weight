@@ -10,17 +10,22 @@ export type WeightStats = {
   count: number;
 };
 
-export async function listWeightEntries(): Promise<WeightEntry[]> {
+export async function listWeightEntries(userId: number): Promise<WeightEntry[]> {
   await ensureSchema();
-  const result = await pool.query(`
+  const result = await pool.query(
+    `
     SELECT id, measured_at, weight_kg, body_fat, note, created_at, updated_at
     FROM weight_entries
+    WHERE user_id = $1
     ORDER BY measured_at ASC
-  `);
+  `,
+    [userId],
+  );
   return result.rows.map(mapWeightEntry);
 }
 
 export async function upsertWeightEntry(input: {
+  userId: number;
   measuredAt: string;
   weightKg: number;
   bodyFat?: number | null;
@@ -29,9 +34,9 @@ export async function upsertWeightEntry(input: {
   await ensureSchema();
   const result = await pool.query(
     `
-      INSERT INTO weight_entries (measured_at, weight_kg, body_fat, note)
-      VALUES ($1, $2, $3, $4)
-      ON CONFLICT (measured_at)
+      INSERT INTO weight_entries (user_id, measured_at, weight_kg, body_fat, note)
+      VALUES ($1, $2, $3, $4, $5)
+      ON CONFLICT (user_id, measured_at)
       DO UPDATE SET
         weight_kg = EXCLUDED.weight_kg,
         body_fat = EXCLUDED.body_fat,
@@ -39,14 +44,23 @@ export async function upsertWeightEntry(input: {
         updated_at = NOW()
       RETURNING id, measured_at, weight_kg, body_fat, note, created_at, updated_at
     `,
-    [input.measuredAt, input.weightKg, input.bodyFat ?? null, input.note ?? null],
+    [
+      input.userId,
+      input.measuredAt,
+      input.weightKg,
+      input.bodyFat ?? null,
+      input.note ?? null,
+    ],
   );
   return mapWeightEntry(result.rows[0]);
 }
 
-export async function deleteWeightEntry(id: number) {
+export async function deleteWeightEntry(id: number, userId: number) {
   await ensureSchema();
-  await pool.query("DELETE FROM weight_entries WHERE id = $1", [id]);
+  await pool.query("DELETE FROM weight_entries WHERE id = $1 AND user_id = $2", [
+    id,
+    userId,
+  ]);
 }
 
 export function getWeightStats(entries: WeightEntry[]): WeightStats {

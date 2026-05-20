@@ -6,6 +6,7 @@ import {
   listWeightEntries,
   upsertWeightEntry,
 } from "@/lib/weight";
+import { getCurrentUser } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
@@ -25,7 +26,12 @@ const entrySchema = z.object({
 
 export async function GET() {
   try {
-    const entries = await listWeightEntries();
+    const user = await getCurrentUser();
+    if (!user) {
+      return NextResponse.json({ message: "请先登录。" }, { status: 401 });
+    }
+
+    const entries = await listWeightEntries(user.id);
     return NextResponse.json({
       entries,
       stats: getWeightStats(entries),
@@ -41,9 +47,14 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
+    const user = await getCurrentUser();
+    if (!user) {
+      return NextResponse.json({ message: "请先登录。" }, { status: 401 });
+    }
+
     const parsed = entrySchema.parse(await request.json());
-    const entry = await upsertWeightEntry(parsed);
-    const entries = await listWeightEntries();
+    const entry = await upsertWeightEntry({ ...parsed, userId: user.id });
+    const entries = await listWeightEntries(user.id);
 
     return NextResponse.json({
       entry,
@@ -61,14 +72,19 @@ export async function POST(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
+    const user = await getCurrentUser();
+    if (!user) {
+      return NextResponse.json({ message: "请先登录。" }, { status: 401 });
+    }
+
     const { searchParams } = new URL(request.url);
     const id = Number(searchParams.get("id"));
     if (!Number.isInteger(id) || id <= 0) {
       return NextResponse.json({ message: "缺少有效的记录 ID。" }, { status: 400 });
     }
 
-    await deleteWeightEntry(id);
-    const entries = await listWeightEntries();
+    await deleteWeightEntry(id, user.id);
+    const entries = await listWeightEntries(user.id);
     return NextResponse.json({
       entries,
       stats: getWeightStats(entries),

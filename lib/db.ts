@@ -34,18 +34,38 @@ if (process.env.NODE_ENV !== "production") {
 
 export async function ensureSchema() {
   globalThis.weightDbReady ??= pool.query(`
+    CREATE TABLE IF NOT EXISTS users (
+      id SERIAL PRIMARY KEY,
+      name TEXT NOT NULL,
+      email TEXT NOT NULL UNIQUE,
+      password_hash TEXT NOT NULL,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+
     CREATE TABLE IF NOT EXISTS weight_entries (
       id SERIAL PRIMARY KEY,
-      measured_at DATE NOT NULL UNIQUE,
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      measured_at DATE NOT NULL,
       weight_kg NUMERIC(5, 2) NOT NULL CHECK (weight_kg > 0 AND weight_kg < 500),
       body_fat NUMERIC(5, 2) CHECK (body_fat IS NULL OR (body_fat >= 0 AND body_fat <= 100)),
       note TEXT,
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      UNIQUE (user_id, measured_at)
+    );
+
+    CREATE TABLE IF NOT EXISTS user_sessions (
+      token TEXT PRIMARY KEY,
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      expires_at TIMESTAMPTZ NOT NULL,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
 
     CREATE INDEX IF NOT EXISTS weight_entries_measured_at_idx
-      ON weight_entries (measured_at DESC);
+      ON weight_entries (user_id, measured_at DESC);
+
+    CREATE INDEX IF NOT EXISTS user_sessions_expires_at_idx
+      ON user_sessions (expires_at);
   `).then(() => undefined);
 
   return globalThis.weightDbReady;

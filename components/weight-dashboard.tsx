@@ -7,9 +7,11 @@ import {
   Dumbbell,
   LineChartIcon,
   Loader2,
+  LogOut,
   Plus,
   Scale,
   Trash2,
+  User,
 } from "lucide-react";
 import {
   Area,
@@ -30,6 +32,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import type { WeightEntry } from "@/lib/db";
+import type { AuthUser } from "@/lib/auth";
 import type { WeightStats } from "@/lib/weight";
 
 type DashboardData = {
@@ -38,6 +41,7 @@ type DashboardData = {
 };
 
 type Props = DashboardData & {
+  user: AuthUser;
   error?: string;
 };
 
@@ -59,7 +63,7 @@ function today() {
   return new Date().toISOString().slice(0, 10);
 }
 
-export function WeightDashboard({ entries, stats, error }: Props) {
+export function WeightDashboard({ entries, stats, user, error }: Props) {
   const [data, setData] = useState<DashboardData>({
     entries,
     stats: stats ?? emptyStats,
@@ -131,6 +135,13 @@ export function WeightDashboard({ entries, stats, error }: Props) {
     });
   }
 
+  function logout() {
+    startTransition(async () => {
+      await fetch("/api/auth/logout", { method: "POST" });
+      window.location.reload();
+    });
+  }
+
   return (
     <main className="min-h-screen">
       <section className="border-b bg-card">
@@ -150,10 +161,28 @@ export function WeightDashboard({ entries, stats, error }: Props) {
                 </p>
               </div>
             </div>
-            <div className="grid grid-cols-3 gap-2 rounded-lg border bg-background p-2 text-center sm:min-w-[360px]">
-              <MetricCell label="当前" value={displayNumber(data.stats.latest, " kg")} />
-              <MetricCell label="变化" value={displayNumber(data.stats.change, " kg")} />
-              <MetricCell label="记录" value={`${data.stats.count}`} />
+            <div className="flex flex-col gap-3 sm:min-w-[360px]">
+              <div className="flex items-center justify-between gap-3 rounded-lg border bg-background px-3 py-2">
+                <div className="flex min-w-0 items-center gap-2 text-sm">
+                  <User className="h-4 w-4 shrink-0 text-muted-foreground" />
+                  <span className="truncate">{user.name}</span>
+                </div>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={logout}
+                  disabled={isPending}
+                >
+                  <LogOut className="h-4 w-4" />
+                  退出
+                </Button>
+              </div>
+              <div className="grid grid-cols-3 gap-2 rounded-lg border bg-background p-2 text-center">
+                <MetricCell label="当前" value={displayNumber(data.stats.latest, " kg")} />
+                <MetricCell label="变化" value={displayNumber(data.stats.change, " kg")} />
+                <MetricCell label="记录" value={`${data.stats.count}`} />
+              </div>
             </div>
           </div>
         </div>

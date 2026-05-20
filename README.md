@@ -1,6 +1,6 @@
 # Weight
 
-一个基于 Next.js、shadcn/ui 风格组件和 PostgreSQL 的体重记录可视化网站。
+一个基于 Next.js、shadcn/ui 风格组件和 PostgreSQL 的体重记录可视化网站，内置登录注册，按用户隔离体重数据。
 
 ## 本地运行
 
@@ -13,7 +13,7 @@ npm run dev
 
 ## 数据库环境变量
 
-项目默认连接数据库名 `weight`，会自动创建数据表 `weight_entries`，但数据库本身需要先存在。
+项目默认连接数据库名 `weight`，会自动创建 `users`、`user_sessions`、`weight_entries` 数据表，但数据库本身需要先存在。
 
 ```bash
 PGHOST=your-postgres-host
