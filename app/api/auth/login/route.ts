@@ -5,7 +5,7 @@ import { loginUser } from "@/lib/auth";
 export const dynamic = "force-dynamic";
 
 const loginSchema = z.object({
-  email: z.string().trim().email().max(120),
+  account: z.string().trim().min(1).max(40),
   password: z.string().min(1).max(100),
 });
 
@@ -15,7 +15,7 @@ export async function POST(request: Request) {
     const user = await loginUser(input);
     if (!user) {
       return NextResponse.json(
-        { message: "邮箱或密码不正确。" },
+        { message: "账号或密码不正确。" },
         { status: 401 },
       );
     }

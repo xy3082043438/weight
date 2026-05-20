@@ -18,7 +18,7 @@ export function AuthForm({ error }: { error?: string }) {
   const [mode, setMode] = useState<"login" | "register">("login");
   const [form, setForm] = useState({
     name: "",
-    email: "",
+    account: "",
     password: "",
   });
   const [message, setMessage] = useState(error ?? "");
@@ -109,14 +109,14 @@ export function AuthForm({ error }: { error?: string }) {
                 </div>
               ) : null}
               <div className="grid gap-2">
-                <Label htmlFor="email">邮箱</Label>
+                <Label htmlFor="account">账号</Label>
                 <Input
-                  id="email"
-                  type="email"
-                  autoComplete="email"
-                  value={form.email}
+                  id="account"
+                  autoComplete="username"
+                  placeholder="例如 zhangsan"
+                  value={form.account}
                   onChange={(event) =>
-                    setForm({ ...form, email: event.target.value })
+                    setForm({ ...form, account: event.target.value })
                   }
                   required
                 />

@@ -10,7 +10,7 @@ const sessionMaxAge = 60 * 60 * 24 * 30;
 export type AuthUser = {
   id: number;
   name: string;
-  email: string;
+  account: string;
 };
 
 async function hashPassword(password: string) {
@@ -55,18 +55,18 @@ async function createSession(userId: number) {
 
 export async function registerUser(input: {
   name: string;
-  email: string;
+  account: string;
   password: string;
 }) {
   await ensureSchema();
   const passwordHash = await hashPassword(input.password);
   const result = await pool.query(
     `
-      INSERT INTO users (name, email, password_hash)
+      INSERT INTO users (name, account, password_hash)
       VALUES ($1, LOWER($2), $3)
-      RETURNING id, name, email
+      RETURNING id, name, account
     `,
-    [input.name, input.email, passwordHash],
+    [input.name, input.account, passwordHash],
   );
 
   const user = result.rows[0] as AuthUser;
@@ -74,11 +74,11 @@ export async function registerUser(input: {
   return user;
 }
 
-export async function loginUser(input: { email: string; password: string }) {
+export async function loginUser(input: { account: string; password: string }) {
   await ensureSchema();
   const result = await pool.query(
-    "SELECT id, name, email, password_hash FROM users WHERE email = LOWER($1)",
-    [input.email],
+    "SELECT id, name, account, password_hash FROM users WHERE account = LOWER($1)",
+    [input.account],
   );
   const row = result.rows[0];
   if (!row || !(await verifyPassword(input.password, row.password_hash))) {
@@ -89,7 +89,7 @@ export async function loginUser(input: { email: string; password: string }) {
   return {
     id: Number(row.id),
     name: String(row.name),
-    email: String(row.email),
+    account: String(row.account),
   };
 }
 
@@ -103,7 +103,7 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
 
   const result = await pool.query(
     `
-      SELECT users.id, users.name, users.email
+      SELECT users.id, users.name, users.account
       FROM user_sessions
       JOIN users ON users.id = user_sessions.user_id
       WHERE user_sessions.token = $1 AND user_sessions.expires_at > NOW()
@@ -119,7 +119,7 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
   return {
     id: Number(row.id),
     name: String(row.name),
-    email: String(row.email),
+    account: String(row.account),
   };
 }
 

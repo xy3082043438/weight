@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 
 const registerSchema = z.object({
   name: z.string().trim().min(1).max(40),
-  email: z.string().trim().email().max(120),
+  account: z.string().trim().min(3).max(40).regex(/^[a-zA-Z0-9_]+$/),
   password: z.string().min(6).max(100),
 });
 
@@ -22,8 +22,8 @@ export async function POST(request: Request) {
       error !== null &&
       "code" in error &&
       error.code === "23505"
-        ? "这个邮箱已经注册。"
-        : "注册失败，请检查姓名、邮箱和密码。";
+        ? "这个账号已经注册。"
+        : "注册失败，请检查昵称、账号和密码。账号只能使用字母、数字和下划线。";
 
     return NextResponse.json({ message }, { status: 400 });
   }
