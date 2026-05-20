@@ -10,6 +10,8 @@ const sessionMaxAge = 60 * 60 * 24 * 30;
 export type AuthUser = {
   id: number;
   account: string;
+  heightCm: number | null;
+  targetWeightKg: number | null;
 };
 
 async function hashPassword(password: string) {
@@ -55,19 +57,27 @@ async function createSession(userId: number) {
 export async function registerUser(input: {
   account: string;
   password: string;
+  heightCm?: number | null;
+  targetWeightKg?: number | null;
 }) {
   await ensureSchema();
   const passwordHash = await hashPassword(input.password);
   const result = await pool.query(
     `
-      INSERT INTO users (name, account, password_hash)
-      VALUES ($1, LOWER($2), $3)
-      RETURNING id, name, account
+      INSERT INTO users (name, account, height_cm, target_weight_kg, password_hash)
+      VALUES ($1, LOWER($2), $3, $4, $5)
+      RETURNING id, account, height_cm, target_weight_kg
     `,
-    [input.account, input.account, passwordHash],
+    [
+      input.account,
+      input.account,
+      input.heightCm ?? null,
+      input.targetWeightKg ?? null,
+      passwordHash,
+    ],
   );
 
-  const user = result.rows[0] as AuthUser;
+  const user = mapAuthUser(result.rows[0]);
   await createSession(user.id);
   return user;
 }
@@ -75,7 +85,7 @@ export async function registerUser(input: {
 export async function loginUser(input: { account: string; password: string }) {
   await ensureSchema();
   const result = await pool.query(
-    "SELECT id, name, account, password_hash FROM users WHERE account = LOWER($1)",
+    "SELECT id, account, height_cm, target_weight_kg, password_hash FROM users WHERE account = LOWER($1)",
     [input.account],
   );
   const row = result.rows[0];
@@ -84,10 +94,7 @@ export async function loginUser(input: { account: string; password: string }) {
   }
 
   await createSession(row.id);
-  return {
-    id: Number(row.id),
-    account: String(row.account),
-  };
+  return mapAuthUser(row);
 }
 
 export async function getCurrentUser(): Promise<AuthUser | null> {
@@ -100,7 +107,7 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
 
   const result = await pool.query(
     `
-      SELECT users.id, users.name, users.account
+      SELECT users.id, users.account, users.height_cm, users.target_weight_kg
       FROM user_sessions
       JOIN users ON users.id = user_sessions.user_id
       WHERE user_sessions.token = $1 AND user_sessions.expires_at > NOW()
@@ -113,10 +120,42 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
     return null;
   }
 
-  return {
-    id: Number(row.id),
-    account: String(row.account),
-  };
+  return mapAuthUser(row);
+}
+
+export async function updateCurrentUserProfile(input: {
+  userId: number;
+  heightCm: number | null;
+  targetWeightKg: number | null;
+  password?: string;
+}) {
+  await ensureSchema();
+  const params: unknown[] = [
+    input.heightCm,
+    input.targetWeightKg,
+    input.userId,
+  ];
+  let passwordSql = "";
+
+  if (input.password) {
+    params.push(await hashPassword(input.password));
+    passwordSql = ", password_hash = $4";
+  }
+
+  const result = await pool.query(
+    `
+      UPDATE users
+      SET height_cm = $1,
+          target_weight_kg = $2
+          ${passwordSql}
+      WHERE id = $3
+      RETURNING id, account, height_cm, target_weight_kg
+    `,
+    params,
+  );
+
+  const row = result.rows[0];
+  return mapAuthUser(row);
 }
 
 export async function logoutUser() {
@@ -129,4 +168,21 @@ export async function logoutUser() {
   }
 
   cookieStore.delete(sessionCookieName);
+}
+
+function parseHeight(value: unknown) {
+  return value === null || value === undefined ? null : Number(value);
+}
+
+function parseWeight(value: unknown) {
+  return value === null || value === undefined ? null : Number(value);
+}
+
+function mapAuthUser(row: Record<string, unknown>): AuthUser {
+  return {
+    id: Number(row.id),
+    account: String(row.account),
+    heightCm: parseHeight(row.height_cm),
+    targetWeightKg: parseWeight(row.target_weight_kg),
+  };
 }

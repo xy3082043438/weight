@@ -14,7 +14,7 @@ export async function listWeightEntries(userId: number): Promise<WeightEntry[]> 
   await ensureSchema();
   const result = await pool.query(
     `
-    SELECT id, measured_at, weight_kg, body_fat, note, created_at, updated_at
+    SELECT id, measured_at, weight_kg, note, created_at, updated_at
     FROM weight_entries
     WHERE user_id = $1
     ORDER BY measured_at ASC
@@ -33,21 +33,19 @@ export async function upsertWeightEntry(input: {
   await ensureSchema();
   const result = await pool.query(
     `
-      INSERT INTO weight_entries (user_id, measured_at, weight_kg, body_fat, note)
-      VALUES ($1, $2, $3, $4, $5)
+      INSERT INTO weight_entries (user_id, measured_at, weight_kg, note)
+      VALUES ($1, $2, $3, $4)
       ON CONFLICT (user_id, measured_at)
       DO UPDATE SET
         weight_kg = EXCLUDED.weight_kg,
-        body_fat = EXCLUDED.body_fat,
         note = EXCLUDED.note,
         updated_at = NOW()
-      RETURNING id, measured_at, weight_kg, body_fat, note, created_at, updated_at
+      RETURNING id, measured_at, weight_kg, note, created_at, updated_at
     `,
     [
       input.userId,
       input.measuredAt,
       input.weightKg,
-      null,
       input.note ?? null,
     ],
   );

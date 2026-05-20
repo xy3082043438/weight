@@ -7,17 +7,23 @@ import {
   upsertWeightEntry,
 } from "@/lib/weight";
 import { getCurrentUser } from "@/lib/auth";
+import {
+  getAbnormalWeightWarning,
+  maxWeightKg,
+  minWeightKg,
+} from "@/lib/weight-validation";
 
 export const dynamic = "force-dynamic";
 
 const entrySchema = z.object({
   measuredAt: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-  weightKg: z.coerce.number().positive().max(500),
+  weightKg: z.coerce.number().min(minWeightKg).max(maxWeightKg),
   note: z
     .string()
     .max(500)
     .optional()
     .transform((value) => value?.trim() || null),
+  confirmAbnormal: z.boolean().optional(),
 });
 
 export async function GET() {
@@ -49,6 +55,23 @@ export async function POST(request: Request) {
     }
 
     const parsed = entrySchema.parse(await request.json());
+    const existingEntries = await listWeightEntries(user.id);
+    const warning = getAbnormalWeightWarning({
+      entries: existingEntries,
+      measuredAt: parsed.measuredAt,
+      weightKg: parsed.weightKg,
+    });
+    if (warning && !parsed.confirmAbnormal) {
+      return NextResponse.json(
+        {
+          code: "ABNORMAL_WEIGHT_DELTA",
+          message: `本次体重比上次记录变化 ${Math.abs(warning.delta).toFixed(1)} kg，请确认输入无误。`,
+          warning,
+        },
+        { status: 409 },
+      );
+    }
+
     const entry = await upsertWeightEntry({ ...parsed, userId: user.id });
     const entries = await listWeightEntries(user.id);
 
@@ -60,7 +83,7 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error(error);
     return NextResponse.json(
-      { message: "记录保存失败，请确认日期和体重格式。" },
+      { message: `记录保存失败，体重需在 ${minWeightKg}-${maxWeightKg} kg 之间。` },
       { status: 400 },
     );
   }

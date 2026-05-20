@@ -19,6 +19,8 @@ export function AuthForm({ error }: { error?: string }) {
   const [form, setForm] = useState({
     account: "",
     password: "",
+    heightCm: "",
+    targetWeightKg: "",
   });
   const [message, setMessage] = useState(error ?? "");
   const [isPending, startTransition] = useTransition();
@@ -120,6 +122,42 @@ export function AuthForm({ error }: { error?: string }) {
                   required
                 />
               </div>
+              {mode === "register" ? (
+                <>
+                  <div className="grid gap-2">
+                    <Label htmlFor="heightCm">身高 cm</Label>
+                    <Input
+                      id="heightCm"
+                      inputMode="decimal"
+                      type="number"
+                      min="50"
+                      max="260"
+                      step="0.1"
+                      placeholder="例如 175"
+                      value={form.heightCm}
+                      onChange={(event) =>
+                        setForm({ ...form, heightCm: event.target.value })
+                      }
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="targetWeightKg">目标体重 kg</Label>
+                    <Input
+                      id="targetWeightKg"
+                      inputMode="decimal"
+                      type="number"
+                      min="1"
+                      max="500"
+                      step="0.1"
+                      placeholder="例如 68"
+                      value={form.targetWeightKg}
+                      onChange={(event) =>
+                        setForm({ ...form, targetWeightKg: event.target.value })
+                      }
+                    />
+                  </div>
+                </>
+              ) : null}
               {message ? (
                 <p className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
                   {message}
