@@ -17,7 +17,6 @@ import { Badge } from "@/components/ui/badge";
 export function AuthForm({ error }: { error?: string }) {
   const [mode, setMode] = useState<"login" | "register">("login");
   const [form, setForm] = useState({
-    name: "",
     account: "",
     password: "",
   });
@@ -94,20 +93,6 @@ export function AuthForm({ error }: { error?: string }) {
             </div>
 
             <form className="space-y-4" onSubmit={submit}>
-              {mode === "register" ? (
-                <div className="grid gap-2">
-                  <Label htmlFor="name">昵称</Label>
-                  <Input
-                    id="name"
-                    autoComplete="name"
-                    value={form.name}
-                    onChange={(event) =>
-                      setForm({ ...form, name: event.target.value })
-                    }
-                    required
-                  />
-                </div>
-              ) : null}
               <div className="grid gap-2">
                 <Label htmlFor="account">账号</Label>
                 <Input

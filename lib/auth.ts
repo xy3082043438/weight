@@ -9,7 +9,6 @@ const sessionMaxAge = 60 * 60 * 24 * 30;
 
 export type AuthUser = {
   id: number;
-  name: string;
   account: string;
 };
 
@@ -54,7 +53,6 @@ async function createSession(userId: number) {
 }
 
 export async function registerUser(input: {
-  name: string;
   account: string;
   password: string;
 }) {
@@ -66,7 +64,7 @@ export async function registerUser(input: {
       VALUES ($1, LOWER($2), $3)
       RETURNING id, name, account
     `,
-    [input.name, input.account, passwordHash],
+    [input.account, input.account, passwordHash],
   );
 
   const user = result.rows[0] as AuthUser;
@@ -88,7 +86,6 @@ export async function loginUser(input: { account: string; password: string }) {
   await createSession(row.id);
   return {
     id: Number(row.id),
-    name: String(row.name),
     account: String(row.account),
   };
 }
@@ -118,7 +115,6 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
 
   return {
     id: Number(row.id),
-    name: String(row.name),
     account: String(row.account),
   };
 }
