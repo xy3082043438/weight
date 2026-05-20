@@ -54,12 +54,30 @@ export async function ensureSchema() {
       UNIQUE (user_id, measured_at)
     );
 
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS name TEXT;
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS account TEXT;
+    UPDATE users
+      SET account = COALESCE(account, email, 'user_' || id::TEXT)
+      WHERE account IS NULL;
+    UPDATE users
+      SET name = COALESCE(name, account)
+      WHERE name IS NULL;
+    ALTER TABLE users ALTER COLUMN account SET NOT NULL;
+    ALTER TABLE users ALTER COLUMN name SET NOT NULL;
+    CREATE UNIQUE INDEX IF NOT EXISTS users_account_unique_idx
+      ON users (account);
+
+    ALTER TABLE weight_entries ADD COLUMN IF NOT EXISTS user_id INTEGER REFERENCES users(id) ON DELETE CASCADE;
+
     CREATE TABLE IF NOT EXISTS user_sessions (
       token TEXT PRIMARY KEY,
       user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
       expires_at TIMESTAMPTZ NOT NULL,
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
+
+    CREATE UNIQUE INDEX IF NOT EXISTS weight_entries_user_measured_at_unique_idx
+      ON weight_entries (user_id, measured_at);
 
     CREATE INDEX IF NOT EXISTS weight_entries_measured_at_idx
       ON weight_entries (user_id, measured_at DESC);
