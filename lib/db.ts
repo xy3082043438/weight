@@ -56,6 +56,16 @@ export async function ensureSchema() {
 
     ALTER TABLE users ADD COLUMN IF NOT EXISTS name TEXT;
     ALTER TABLE users ADD COLUMN IF NOT EXISTS account TEXT;
+    DO $$
+    BEGIN
+      IF EXISTS (
+        SELECT 1
+        FROM information_schema.columns
+        WHERE table_name = 'users' AND column_name = 'email'
+      ) THEN
+        ALTER TABLE users ALTER COLUMN email DROP NOT NULL;
+      END IF;
+    END $$;
     UPDATE users
       SET account = COALESCE(account, email, 'user_' || id::TEXT)
       WHERE account IS NULL;
