@@ -28,7 +28,6 @@ export async function upsertWeightEntry(input: {
   userId: number;
   measuredAt: string;
   weightKg: number;
-  bodyFat?: number | null;
   note?: string | null;
 }) {
   await ensureSchema();
@@ -48,7 +47,7 @@ export async function upsertWeightEntry(input: {
       input.userId,
       input.measuredAt,
       input.weightKg,
-      input.bodyFat ?? null,
+      null,
       input.note ?? null,
     ],
   );

@@ -13,10 +13,6 @@ export const dynamic = "force-dynamic";
 const entrySchema = z.object({
   measuredAt: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   weightKg: z.coerce.number().positive().max(500),
-  bodyFat: z
-    .union([z.coerce.number().min(0).max(100), z.literal(""), z.null()])
-    .optional()
-    .transform((value) => (value === "" || value === undefined ? null : value)),
   note: z
     .string()
     .max(500)
@@ -64,7 +60,7 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error(error);
     return NextResponse.json(
-      { message: "记录保存失败，请确认日期、体重和体脂格式。" },
+      { message: "记录保存失败，请确认日期和体重格式。" },
       { status: 400 },
     );
   }

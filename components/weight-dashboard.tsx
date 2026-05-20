@@ -17,8 +17,6 @@ import {
   Area,
   AreaChart,
   CartesianGrid,
-  Line,
-  LineChart,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -71,7 +69,6 @@ export function WeightDashboard({ entries, stats, user, error }: Props) {
   const [form, setForm] = useState({
     measuredAt: today(),
     weightKg: "",
-    bodyFat: "",
     note: "",
   });
   const [message, setMessage] = useState(error ?? "");
@@ -111,7 +108,6 @@ export function WeightDashboard({ entries, stats, user, error }: Props) {
         setForm((current) => ({
           measuredAt: current.measuredAt,
           weightKg: "",
-          bodyFat: "",
           note: "",
         }));
       } catch (err) {
@@ -157,7 +153,7 @@ export function WeightDashboard({ entries, stats, user, error }: Props) {
                   体重记录
                 </h1>
                 <p className="mt-2 max-w-2xl text-sm text-muted-foreground sm:text-base">
-                  记录每日体重和体脂，查看趋势、波动区间和近期变化。
+                  记录每日体重，查看趋势、波动区间和近期变化。
                 </p>
               </div>
             </div>
@@ -212,40 +208,22 @@ export function WeightDashboard({ entries, stats, user, error }: Props) {
                     required
                   />
                 </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="grid gap-2">
-                    <Label htmlFor="weightKg">体重 kg</Label>
-                    <Input
-                      id="weightKg"
-                      inputMode="decimal"
-                      placeholder="72.4"
-                      type="number"
-                      min="1"
-                      max="500"
-                      step="0.1"
-                      value={form.weightKg}
-                      onChange={(event) =>
-                        setForm({ ...form, weightKg: event.target.value })
-                      }
-                      required
-                    />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="bodyFat">体脂 %</Label>
-                    <Input
-                      id="bodyFat"
-                      inputMode="decimal"
-                      placeholder="18.5"
-                      type="number"
-                      min="0"
-                      max="100"
-                      step="0.1"
-                      value={form.bodyFat}
-                      onChange={(event) =>
-                        setForm({ ...form, bodyFat: event.target.value })
-                      }
-                    />
-                  </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="weightKg">体重 kg</Label>
+                  <Input
+                    id="weightKg"
+                    inputMode="decimal"
+                    placeholder="72.4"
+                    type="number"
+                    min="1"
+                    max="500"
+                    step="0.1"
+                    value={form.weightKg}
+                    onChange={(event) =>
+                      setForm({ ...form, weightKg: event.target.value })
+                    }
+                    required
+                  />
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="note">备注</Label>
@@ -285,7 +263,7 @@ export function WeightDashboard({ entries, stats, user, error }: Props) {
           <Card>
             <CardHeader>
               <CardTitle>趋势图</CardTitle>
-              <CardDescription>体重趋势和体脂曲线会随记录自动更新。</CardDescription>
+              <CardDescription>体重趋势会随记录自动更新。</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="h-[280px] sm:h-[360px]">
@@ -301,9 +279,9 @@ export function WeightDashboard({ entries, stats, user, error }: Props) {
                         width={48}
                       />
                       <Tooltip
-                        formatter={(value, name) => [
-                          `${Number(value).toFixed(1)}${name === "bodyFat" ? "%" : " kg"}`,
-                          name === "bodyFat" ? "体脂" : "体重",
+                        formatter={(value) => [
+                          `${Number(value).toFixed(1)} kg`,
+                          "体重",
                         ]}
                         labelFormatter={(label) => `日期 ${label}`}
                       />
@@ -314,14 +292,6 @@ export function WeightDashboard({ entries, stats, user, error }: Props) {
                         fill="hsl(var(--primary) / 0.18)"
                         strokeWidth={3}
                         name="weightKg"
-                      />
-                      <Line
-                        type="monotone"
-                        dataKey="bodyFat"
-                        stroke="hsl(var(--accent))"
-                        strokeWidth={2}
-                        dot={false}
-                        name="bodyFat"
                       />
                     </AreaChart>
                   </ResponsiveContainer>
@@ -353,8 +323,7 @@ export function WeightDashboard({ entries, stats, user, error }: Props) {
                         <span className="text-xs text-muted-foreground">kg</span>
                       </div>
                       <div className="text-sm text-muted-foreground">
-                        {entry.bodyFat === null ? "体脂未记录" : `体脂 ${entry.bodyFat.toFixed(1)}%`}
-                        {entry.note ? ` · ${entry.note}` : ""}
+                        {entry.note || "无备注"}
                       </div>
                       <Button
                         type="button"
