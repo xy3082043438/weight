@@ -10,7 +10,7 @@ declare global {
 const ssl =
   process.env.PGSSLMODE === "disable"
     ? false
-    : process.env.PGSSLMODE === "require" || process.env.NODE_ENV === "production"
+    : process.env.PGSSLMODE === "require"
       ? { rejectUnauthorized: false }
       : undefined;
 
