@@ -39,6 +39,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { SheepMark } from "@/components/sheep-mark";
 import { AiChatWidget } from "@/components/ai-chat-widget";
 import { useToast } from "@/components/toast";
+import { InfoPopover } from "@/components/info-popover";
+import { cn } from "@/lib/utils";
 import type { WeightEntry } from "@/lib/db";
 import type { AuthUser } from "@/lib/auth";
 import type { WeightStats } from "@/lib/weight";
@@ -459,7 +461,12 @@ export function WeightDashboard({ entries, stats, user, error }: Props) {
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             <MetricCell icon={Scale} label="当前体重" value={displayNumber(data.stats.latest, " kg")} accent />
             <MetricCell icon={Target} label="目标差" value={displayTargetDelta(targetDelta)} />
-            <MetricCell icon={Activity} label="BMI" value={displayBmi(bmi)} />
+            <MetricCell
+              icon={Activity}
+              label="BMI"
+              value={displayBmi(bmi)}
+              info={<BmiInfo bmi={bmi} />}
+            />
             <MetricCell icon={CalendarDays} label="记录数" value={`${data.stats.count}`} />
           </div>
         </div>
@@ -969,11 +976,13 @@ function MetricCell({
   label,
   value,
   accent = false,
+  info,
 }: {
   icon: React.ComponentType<{ className?: string }>;
   label: string;
   value: string;
   accent?: boolean;
+  info?: React.ReactNode;
 }) {
   return (
     <div
@@ -984,8 +993,50 @@ function MetricCell({
       <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
         <Icon className={`h-3.5 w-3.5 ${accent ? "text-primary" : ""}`} />
         {label}
+        {info ? <InfoPopover srLabel={`${label} 说明`}>{info}</InfoPopover> : null}
       </div>
       <div className="mt-1.5 truncate text-lg font-semibold sm:text-xl">{value}</div>
+    </div>
+  );
+}
+
+const bmiCategories = [
+  { key: "underweight", label: "偏瘦", range: "< 18.5", max: 18.5 },
+  { key: "normal", label: "正常", range: "18.5 – 23.9", max: 24 },
+  { key: "overweight", label: "超重", range: "24.0 – 27.9", max: 28 },
+  { key: "obese", label: "肥胖", range: "≥ 28.0", max: Infinity },
+] as const;
+
+function bmiCategoryKey(bmi: number | null) {
+  if (bmi === null) return null;
+  return bmiCategories.find((category) => bmi < category.max)?.key ?? "obese";
+}
+
+function BmiInfo({ bmi }: { bmi: number | null }) {
+  const current = bmiCategoryKey(bmi);
+  return (
+    <div className="space-y-2">
+      <p className="font-medium">BMI（身体质量指数）</p>
+      <p className="text-muted-foreground">
+        体重(kg) ÷ 身高(m)²，用于粗略评估胖瘦。
+      </p>
+      <ul className="space-y-0.5">
+        {bmiCategories.map((category) => (
+          <li
+            key={category.key}
+            className={cn(
+              "flex items-center justify-between rounded px-1.5 py-0.5",
+              category.key === current && "bg-primary/10 font-medium text-primary",
+            )}
+          >
+            <span>{category.label}</span>
+            <span className="tabular-nums text-muted-foreground">{category.range}</span>
+          </li>
+        ))}
+      </ul>
+      <p className="text-[11px] text-muted-foreground">
+        参考中国成人标准，孕期、运动员等情况不适用。
+      </p>
     </div>
   );
 }
