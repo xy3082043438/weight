@@ -2,6 +2,20 @@
 
 一个基于 Next.js、shadcn/ui 风格组件和 PostgreSQL 的体重记录可视化网站，内置账号密码登录注册、用户资料修改，按用户隔离体重数据。
 
+在线体验：<https://weight.thelambday.me>
+
+## 界面预览
+
+| 登录 / 注册 | 首页面板（含录入、目标进度与趋势图） |
+| :---: | :---: |
+| ![登录注册](docs/screenshots/login.png) | ![首页面板](docs/screenshots/dashboard.png) |
+
+<p align="center">
+  <img src="docs/screenshots/mobile.jpg" alt="移动端" width="320" />
+  <br />
+  <em>移动端布局</em>
+</p>
+
 ## 本地运行
 
 ```bash
