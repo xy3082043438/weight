@@ -66,7 +66,7 @@ export function AuthForm({ error }: { error?: string }) {
             <CardDescription>
               {mode === "login"
                 ? "使用你的账号进入体重记录面板。"
-                : "创建账号后会自动登录，身高和目标体重可登录后在设置中填写。"}
+                : "创建账号后会自动登录。"}
             </CardDescription>
           </CardHeader>
           <CardContent>
