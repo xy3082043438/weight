@@ -522,7 +522,7 @@ export function WeightDashboard({ entries, stats, user, error }: Props) {
                   <Label htmlFor="note">备注</Label>
                   <Textarea
                     id="note"
-                    placeholder="训练、饮食、睡眠等影响因素"
+                    placeholder="只填影响体重的因素，如：昨晚吃多了、喝酒、没睡好"
                     value={form.note}
                     onChange={(event) => setForm({ ...form, note: event.target.value })}
                   />
@@ -550,7 +550,7 @@ export function WeightDashboard({ entries, stats, user, error }: Props) {
                 <Textarea
                   value={naturalText}
                   onChange={(event) => setNaturalText(event.target.value)}
-                  placeholder="例如：今天早上 72.4，跑步后测的"
+                  placeholder="一句话记录，如：昨天 75.5，吃了火锅"
                   required
                 />
                 <Button className="w-full" disabled={isPending || !naturalText.trim()}>
