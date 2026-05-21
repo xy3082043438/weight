@@ -71,7 +71,16 @@ export async function POST(request: Request) {
       },
     ]);
 
-    const parsed = extractJson(aiContent);
+    let parsed: unknown;
+    try {
+      parsed = extractJson(aiContent);
+    } catch {
+      console.error("[natural] AI 返回无法解析为 JSON:", aiContent);
+      return NextResponse.json(
+        { message: "AI 返回格式异常，请换种说法重试。" },
+        { status: 400 },
+      );
+    }
     if (
       typeof parsed === "object" &&
       parsed !== null &&
@@ -83,7 +92,18 @@ export async function POST(request: Request) {
       );
     }
 
-    const entryInput = parsedEntrySchema.parse(parsed);
+    const parsedResult = parsedEntrySchema.safeParse(parsed);
+    if (!parsedResult.success) {
+      console.error("[natural] AI 返回不符合 schema:", aiContent, parsedResult.error.issues);
+      const weightIssue = parsedResult.error.issues.find(
+        (issue) => issue.path[0] === "weightKg",
+      );
+      const message = weightIssue
+        ? `识别到的体重超出范围，需在 ${minWeightKg}-${maxWeightKg} kg 之间。`
+        : "未能识别出有效的日期或体重，请补充说明后重试。";
+      return NextResponse.json({ message }, { status: 400 });
+    }
+    const entryInput = parsedResult.data;
     const existingEntries = await listWeightEntries(user.id);
     const warning = getAbnormalWeightWarning({
       entries: existingEntries,
@@ -121,7 +141,7 @@ export async function POST(request: Request) {
     const message =
       error instanceof Error && error.message === "Missing SILICONFLOW_API_KEY"
         ? "缺少 SILICONFLOW_API_KEY 环境变量。"
-        : `口语录入解析失败，体重需在 ${minWeightKg}-${maxWeightKg} kg 之间。`;
+        : "口语录入解析失败，请稍后重试。";
 
     return NextResponse.json({ message }, { status: 400 });
   }

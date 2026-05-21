@@ -126,6 +126,7 @@ export function WeightDashboard({ entries, stats, user, error }: Props) {
   });
   const [naturalText, setNaturalText] = useState("");
   const [message, setMessage] = useState(error ?? "");
+  const [naturalMessage, setNaturalMessage] = useState("");
   const [profileMessage, setProfileMessage] = useState("");
   const [csvMessage, setCsvMessage] = useState("");
   const [aiReport, setAiReport] = useState("");
@@ -225,7 +226,7 @@ export function WeightDashboard({ entries, stats, user, error }: Props) {
 
   function submitNaturalEntry(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setMessage("");
+    setNaturalMessage("");
 
     startTransition(async () => {
       try {
@@ -254,7 +255,7 @@ export function WeightDashboard({ entries, stats, user, error }: Props) {
         await refreshFromResponse(response);
         setNaturalText("");
       } catch (err) {
-        setMessage(err instanceof Error ? err.message : "口语录入失败");
+        setNaturalMessage(err instanceof Error ? err.message : "口语录入失败");
       }
     });
   }
@@ -542,9 +543,9 @@ export function WeightDashboard({ entries, stats, user, error }: Props) {
                   placeholder="例如：今天早上 72.4，跑步后测的"
                   required
                 />
-                {message ? (
+                {naturalMessage ? (
                   <p className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
-                    {message}
+                    {naturalMessage}
                   </p>
                 ) : null}
                 <Button className="w-full" disabled={isPending || !naturalText.trim()}>
@@ -636,14 +637,19 @@ export function WeightDashboard({ entries, stats, user, error }: Props) {
               <div className="h-[280px] sm:h-[360px]">
                 {chartData.length > 0 ? (
                   <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={chartData} margin={{ left: -18, right: 10, top: 10 }}>
+                    <AreaChart data={chartData} margin={{ left: 4, right: 10, top: 10 }}>
                       <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                       <XAxis dataKey="dateLabel" tickLine={false} axisLine={false} />
                       <YAxis
                         tickLine={false}
                         axisLine={false}
-                        domain={["dataMin - 1", "dataMax + 1"]}
-                        width={48}
+                        domain={[
+                          (dataMin: number) => Math.floor(dataMin - 1),
+                          (dataMax: number) => Math.ceil(dataMax + 1),
+                        ]}
+                        allowDecimals={false}
+                        width={36}
+                        tickFormatter={(value) => `${value}`}
                       />
                       <Tooltip
                         formatter={(value, name) => [
