@@ -21,7 +21,7 @@ export const pool =
     port: Number(process.env.PGPORT ?? 5432),
     user: process.env.PGUSER ?? process.env.POSTGRES_USER ?? "postgres",
     password: process.env.PG_PASSWORD ?? process.env.PGPASSWORD,
-    database: process.env.PGDATABASE ?? "weight",
+    database: process.env.PGDATABASE ?? "weight_tmp",
     ssl,
     max: Number(process.env.PG_POOL_MAX ?? 5),
     connectionTimeoutMillis: 3000,
@@ -36,8 +36,7 @@ export async function ensureSchema() {
   globalThis.weightDbReady ??= pool.query(`
     CREATE TABLE IF NOT EXISTS users (
       id SERIAL PRIMARY KEY,
-      name TEXT NOT NULL,
-      account TEXT NOT NULL UNIQUE,
+      username TEXT NOT NULL UNIQUE,
       height_cm NUMERIC(5, 2),
       target_weight_kg NUMERIC(5, 2),
       password_hash TEXT NOT NULL,
@@ -55,34 +54,6 @@ export async function ensureSchema() {
       UNIQUE (user_id, measured_at)
     );
 
-    ALTER TABLE users ADD COLUMN IF NOT EXISTS name TEXT;
-    ALTER TABLE users ADD COLUMN IF NOT EXISTS account TEXT;
-    ALTER TABLE users ADD COLUMN IF NOT EXISTS height_cm NUMERIC(5, 2);
-    ALTER TABLE users ADD COLUMN IF NOT EXISTS target_weight_kg NUMERIC(5, 2);
-    DO $$
-    BEGIN
-      IF EXISTS (
-        SELECT 1
-        FROM information_schema.columns
-        WHERE table_name = 'users' AND column_name = 'email'
-      ) THEN
-        ALTER TABLE users ALTER COLUMN email DROP NOT NULL;
-      END IF;
-    END $$;
-    UPDATE users
-      SET account = COALESCE(account, email, 'user_' || id::TEXT)
-      WHERE account IS NULL;
-    UPDATE users
-      SET name = COALESCE(name, account)
-      WHERE name IS NULL;
-    ALTER TABLE users ALTER COLUMN account SET NOT NULL;
-    ALTER TABLE users ALTER COLUMN name SET NOT NULL;
-    CREATE UNIQUE INDEX IF NOT EXISTS users_account_unique_idx
-      ON users (account);
-
-    ALTER TABLE weight_entries ADD COLUMN IF NOT EXISTS user_id INTEGER REFERENCES users(id) ON DELETE CASCADE;
-    ALTER TABLE weight_entries DROP COLUMN IF EXISTS body_fat;
-
     CREATE TABLE IF NOT EXISTS user_sessions (
       token TEXT PRIMARY KEY,
       user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -97,9 +68,6 @@ export async function ensureSchema() {
       count INTEGER NOT NULL DEFAULT 0,
       PRIMARY KEY (user_id, usage_key, usage_date)
     );
-
-    CREATE UNIQUE INDEX IF NOT EXISTS weight_entries_user_measured_at_unique_idx
-      ON weight_entries (user_id, measured_at);
 
     CREATE INDEX IF NOT EXISTS weight_entries_measured_at_idx
       ON weight_entries (user_id, measured_at DESC);

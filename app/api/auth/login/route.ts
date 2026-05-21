@@ -5,7 +5,7 @@ import { loginUser } from "@/lib/auth";
 export const dynamic = "force-dynamic";
 
 const loginSchema = z.object({
-  account: z.string().trim().min(1).max(40),
+  username: z.string().trim().min(1).max(40),
   password: z.string().min(1).max(100),
 });
 

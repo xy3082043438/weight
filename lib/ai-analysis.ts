@@ -8,7 +8,7 @@ export function buildWeightContext(input: {
 }) {
   const recentEntries = input.entries.slice(-(input.maxEntries ?? 10));
   const profile = [
-    `账号：${input.user.account}`,
+    `账号：${input.user.username}`,
     `身高：${input.user.heightCm ? `${input.user.heightCm}cm` : "未设置"}`,
     `目标体重：${input.user.targetWeightKg ? `${input.user.targetWeightKg}kg` : "未设置"}`,
   ].join("\n");

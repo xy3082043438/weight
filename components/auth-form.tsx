@@ -17,7 +17,7 @@ import { Label } from "@/components/ui/label";
 export function AuthForm({ error }: { error?: string }) {
   const [mode, setMode] = useState<"login" | "register">("login");
   const [form, setForm] = useState({
-    account: "",
+    username: "",
     password: "",
   });
   const [message, setMessage] = useState(error ?? "");
@@ -93,14 +93,14 @@ export function AuthForm({ error }: { error?: string }) {
 
             <form className="space-y-4" onSubmit={submit}>
               <div className="grid gap-2">
-                <Label htmlFor="account">账号</Label>
+                <Label htmlFor="username">账号</Label>
                 <Input
-                  id="account"
+                  id="username"
                   autoComplete="username"
                   placeholder="例如 zhangsan"
-                  value={form.account}
+                  value={form.username}
                   onChange={(event) =>
-                    setForm({ ...form, account: event.target.value })
+                    setForm({ ...form, username: event.target.value })
                   }
                   required
                 />

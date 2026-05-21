@@ -439,7 +439,7 @@ export function WeightDashboard({ entries, stats, user, error }: Props) {
                 <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
                   <User className="h-4 w-4" />
                 </span>
-                <span className="truncate font-medium">{profile.account}</span>
+                <span className="truncate font-medium">{profile.username}</span>
                 {profile.heightCm ? (
                   <span className="shrink-0 text-muted-foreground">
                     {profile.heightCm.toFixed(1)}cm

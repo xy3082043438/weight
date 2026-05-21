@@ -5,7 +5,7 @@ import { registerUser } from "@/lib/auth";
 export const dynamic = "force-dynamic";
 
 const registerSchema = z.object({
-  account: z.string().trim().min(3).max(40).regex(/^[a-zA-Z0-9_]+$/),
+  username: z.string().trim().min(3).max(40).regex(/^[a-zA-Z0-9_]+$/),
   password: z.string().min(6).max(100),
 });
 

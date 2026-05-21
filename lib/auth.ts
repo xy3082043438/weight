@@ -9,7 +9,7 @@ const sessionMaxAge = 60 * 60 * 24 * 30;
 
 export type AuthUser = {
   id: number;
-  account: string;
+  username: string;
   heightCm: number | null;
   targetWeightKg: number | null;
 };
@@ -55,18 +55,18 @@ async function createSession(userId: number) {
 }
 
 export async function registerUser(input: {
-  account: string;
+  username: string;
   password: string;
 }) {
   await ensureSchema();
   const passwordHash = await hashPassword(input.password);
   const result = await pool.query(
     `
-      INSERT INTO users (name, account, password_hash)
-      VALUES ($1, LOWER($2), $3)
-      RETURNING id, account, height_cm, target_weight_kg
+      INSERT INTO users (username, password_hash)
+      VALUES (LOWER($1), $2)
+      RETURNING id, username, height_cm, target_weight_kg
     `,
-    [input.account, input.account, passwordHash],
+    [input.username, passwordHash],
   );
 
   const user = mapAuthUser(result.rows[0]);
@@ -74,11 +74,11 @@ export async function registerUser(input: {
   return user;
 }
 
-export async function loginUser(input: { account: string; password: string }) {
+export async function loginUser(input: { username: string; password: string }) {
   await ensureSchema();
   const result = await pool.query(
-    "SELECT id, account, height_cm, target_weight_kg, password_hash FROM users WHERE account = LOWER($1)",
-    [input.account],
+    "SELECT id, username, height_cm, target_weight_kg, password_hash FROM users WHERE username = LOWER($1)",
+    [input.username],
   );
   const row = result.rows[0];
   if (!row || !(await verifyPassword(input.password, row.password_hash))) {
@@ -99,7 +99,7 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
 
   const result = await pool.query(
     `
-      SELECT users.id, users.account, users.height_cm, users.target_weight_kg
+      SELECT users.id, users.username, users.height_cm, users.target_weight_kg
       FROM user_sessions
       JOIN users ON users.id = user_sessions.user_id
       WHERE user_sessions.token = $1 AND user_sessions.expires_at > NOW()
@@ -141,7 +141,7 @@ export async function updateCurrentUserProfile(input: {
           target_weight_kg = $2
           ${passwordSql}
       WHERE id = $3
-      RETURNING id, account, height_cm, target_weight_kg
+      RETURNING id, username, height_cm, target_weight_kg
     `,
     params,
   );
@@ -173,7 +173,7 @@ function parseWeight(value: unknown) {
 function mapAuthUser(row: Record<string, unknown>): AuthUser {
   return {
     id: Number(row.id),
-    account: String(row.account),
+    username: String(row.username),
     heightCm: parseHeight(row.height_cm),
     targetWeightKg: parseWeight(row.target_weight_kg),
   };
