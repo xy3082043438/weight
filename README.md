@@ -6,14 +6,18 @@
 
 ## 界面预览
 
-| 登录 / 注册 | 首页面板（含录入、目标进度与趋势图） |
-| :---: | :---: |
-| ![登录注册](docs/screenshots/login.png) | ![首页面板](docs/screenshots/dashboard.png) |
+**登录 / 注册**
+
+![登录注册](docs/screenshots/login.png)
+
+**首页面板（含录入、目标进度与趋势图）**
+
+![首页面板](docs/screenshots/dashboard.png)
+
+**移动端布局**
 
 <p align="center">
   <img src="docs/screenshots/mobile.jpg" alt="移动端" width="320" />
-  <br />
-  <em>移动端布局</em>
 </p>
 
 ## 本地运行
