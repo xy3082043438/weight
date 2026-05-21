@@ -37,7 +37,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { SheepMark } from "@/components/sheep-mark";
-import { WeightOcrButton } from "@/components/weight-ocr-button";
 import { AiChatWidget } from "@/components/ai-chat-widget";
 import { useToast } from "@/components/toast";
 import type { WeightEntry } from "@/lib/db";
@@ -510,12 +509,6 @@ export function WeightDashboard({ entries, stats, user, error }: Props) {
                       setForm({ ...form, weightKg: event.target.value })
                     }
                     required
-                  />
-                  <WeightOcrButton
-                    disabled={isPending}
-                    onRecognized={(kg) =>
-                      setForm((current) => ({ ...current, weightKg: kg.toFixed(1) }))
-                    }
                   />
                 </div>
                 <div className="grid gap-2">

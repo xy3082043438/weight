@@ -1,22 +1,14 @@
 const siliconFlowApiUrl = "https://api.siliconflow.cn/v1/chat/completions";
 const defaultModel = "deepseek-ai/DeepSeek-V3.2";
-const ocrModel = "deepseek-ai/DeepSeek-OCR";
 
 type TextContent = {
   type: "text";
   text: string;
 };
 
-type ImageContent = {
-  type: "image_url";
-  image_url: {
-    url: string;
-  };
-};
-
 export type ChatMessage = {
   role: "system" | "user" | "assistant";
-  content: string | Array<TextContent | ImageContent>;
+  content: string | Array<TextContent>;
 };
 
 type SiliconFlowChoice = {
@@ -64,35 +56,4 @@ export async function createAiChatCompletion(
   }
 
   return payload.choices?.[0]?.message?.content?.trim() ?? "";
-}
-
-export async function createOcrCompletion(input: {
-  imageUrl: string;
-  prompt?: string;
-}) {
-  return createAiChatCompletion(
-    [
-      {
-        role: "user",
-        content: [
-          {
-            type: "text",
-            text:
-              input.prompt ??
-              "请识别图片中的文字，保持原始顺序输出。只输出识别结果，不要添加额外解释。",
-          },
-          {
-            type: "image_url",
-            image_url: {
-              url: input.imageUrl,
-            },
-          },
-        ],
-      },
-    ],
-    {
-      model: ocrModel,
-      temperature: 0,
-    },
-  );
 }

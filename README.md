@@ -58,39 +58,10 @@ PG_POOL_MAX=3
 deepseek-ai/DeepSeek-V3.2
 ```
 
-同时已接入 OCR 模型：
-
-```text
-deepseek-ai/DeepSeek-OCR
-```
-
 后端接口：
 
 ```text
 POST /api/ai/chat
-```
-
-OCR 后端接口：
-
-```text
-POST /api/ai/ocr
-```
-
-支持传入图片 URL：
-
-```json
-{
-  "imageUrl": "https://example.com/image.png"
-}
-```
-
-也支持传入 base64：
-
-```json
-{
-  "mimeType": "image/png",
-  "imageBase64": "..."
-}
 ```
 
 该接口需要登录后访问，API Key 只在服务端读取：
