@@ -39,6 +39,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { SheepMark } from "@/components/sheep-mark";
 import { WeightOcrButton } from "@/components/weight-ocr-button";
 import { AiChatWidget } from "@/components/ai-chat-widget";
+import { useToast } from "@/components/toast";
 import type { WeightEntry } from "@/lib/db";
 import type { AuthUser } from "@/lib/auth";
 import type { WeightStats } from "@/lib/weight";
@@ -125,16 +126,17 @@ export function WeightDashboard({ entries, stats, user, error }: Props) {
     note: "",
   });
   const [naturalText, setNaturalText] = useState("");
-  const [message, setMessage] = useState(error ?? "");
-  const [naturalMessage, setNaturalMessage] = useState("");
-  const [profileMessage, setProfileMessage] = useState("");
-  const [csvMessage, setCsvMessage] = useState("");
   const [aiReport, setAiReport] = useState("");
-  const [aiReportMessage, setAiReportMessage] = useState("");
-  const [offlineMessage, setOfflineMessage] = useState("");
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   const weightInputRef = useRef<HTMLInputElement>(null);
+  const toast = useToast();
+
+  useEffect(() => {
+    if (error) {
+      toast.error(error);
+    }
+  }, [error, toast]);
 
   function focusWeightInput() {
     weightInputRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -145,6 +147,26 @@ export function WeightDashboard({ entries, stats, user, error }: Props) {
     () => addMovingAverage(data.entries),
     [data.entries],
   );
+
+  const yAxis = useMemo(() => {
+    const values = chartData
+      .flatMap((point) => [point.weightKg, point.movingAverage7])
+      .filter((value): value is number => Number.isFinite(value));
+    if (values.length === 0) {
+      return { domain: [0, 1] as [number, number], ticks: [0, 1] };
+    }
+    const min = Math.floor(Math.min(...values) - 1);
+    const max = Math.ceil(Math.max(...values) + 1);
+    const step = Math.max(1, Math.ceil((max - min) / 6));
+    const ticks: number[] = [];
+    for (let tick = min; tick <= max; tick += step) {
+      ticks.push(tick);
+    }
+    if (ticks[ticks.length - 1] !== max) {
+      ticks.push(max);
+    }
+    return { domain: [min, max] as [number, number], ticks };
+  }, [chartData]);
 
   const recentEntries = [...data.entries].reverse();
   const bmi = calculateBmi(data.stats.latest, profile.heightCm);
@@ -191,13 +213,12 @@ export function WeightDashboard({ entries, stats, user, error }: Props) {
 
   function submitEntry(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setMessage("");
 
     startTransition(async () => {
       const payload = { ...form };
       if (!navigator.onLine) {
         saveOfflineEntry(payload);
-        setOfflineMessage("网络不可用，已离线保存。恢复在线后会自动同步。");
+        toast.info("网络不可用，已离线保存。恢复在线后会自动同步。");
         setForm((current) => ({
           measuredAt: current.measuredAt,
           weightKg: "",
@@ -213,20 +234,20 @@ export function WeightDashboard({ entries, stats, user, error }: Props) {
           weightKg: "",
           note: "",
         }));
+        toast.success("已保存记录。");
       } catch (err) {
         if (!navigator.onLine) {
           saveOfflineEntry(payload);
-          setOfflineMessage("网络中断，已离线保存。恢复在线后会自动同步。");
+          toast.info("网络中断，已离线保存。恢复在线后会自动同步。");
           return;
         }
-        setMessage(err instanceof Error ? err.message : "保存失败");
+        toast.error(err instanceof Error ? err.message : "保存失败");
       }
     });
   }
 
   function submitNaturalEntry(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setNaturalMessage("");
 
     startTransition(async () => {
       try {
@@ -250,12 +271,14 @@ export function WeightDashboard({ entries, stats, user, error }: Props) {
           });
           await refreshFromResponse(confirmedResponse);
           setNaturalText("");
+          toast.success("已记录。");
           return;
         }
         await refreshFromResponse(response);
         setNaturalText("");
+        toast.success("已记录。");
       } catch (err) {
-        setNaturalMessage(err instanceof Error ? err.message : "口语录入失败");
+        toast.error(err instanceof Error ? err.message : "口语录入失败");
       }
     });
   }
@@ -292,25 +315,24 @@ export function WeightDashboard({ entries, stats, user, error }: Props) {
 
       writeOfflineQueue(remaining);
       if (synced.length > 0) {
-        setOfflineMessage(`已自动同步 ${synced.length} 条离线记录。`);
+        toast.success(`已自动同步 ${synced.length} 条离线记录。`);
       }
       if (remaining.length > 0) {
-        setOfflineMessage("仍有离线记录未同步，请检查网络或异常体重提醒。");
+        toast.info("仍有离线记录未同步，请检查网络或异常体重提醒。");
       }
     });
   }
 
   function removeEntry(id: number) {
-    setMessage("");
-
     startTransition(async () => {
       try {
         const response = await fetch(`/api/weights?id=${id}`, {
           method: "DELETE",
         });
         await refreshFromResponse(response);
+        toast.success("已删除记录。");
       } catch (err) {
-        setMessage(err instanceof Error ? err.message : "删除失败");
+        toast.error(err instanceof Error ? err.message : "删除失败");
       }
     });
   }
@@ -324,7 +346,6 @@ export function WeightDashboard({ entries, stats, user, error }: Props) {
 
   function submitProfile(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setProfileMessage("");
 
     startTransition(async () => {
       try {
@@ -339,9 +360,9 @@ export function WeightDashboard({ entries, stats, user, error }: Props) {
         }
         setProfile(payload.user);
         setProfileForm((current) => ({ ...current, password: "" }));
-        setProfileMessage("资料已保存。");
+        toast.success("资料已保存。");
       } catch (err) {
-        setProfileMessage(err instanceof Error ? err.message : "资料保存失败");
+        toast.error(err instanceof Error ? err.message : "资料保存失败");
       }
     });
   }
@@ -353,7 +374,6 @@ export function WeightDashboard({ entries, stats, user, error }: Props) {
       return;
     }
 
-    setCsvMessage("");
     startTransition(async () => {
       try {
         const formData = new FormData();
@@ -367,15 +387,14 @@ export function WeightDashboard({ entries, stats, user, error }: Props) {
           throw new Error(payload.message ?? "CSV 导入失败");
         }
         setData({ entries: payload.entries, stats: payload.stats });
-        setCsvMessage(`已导入 ${payload.imported} 条记录。`);
+        toast.success(`已导入 ${payload.imported} 条记录。`);
       } catch (err) {
-        setCsvMessage(err instanceof Error ? err.message : "CSV 导入失败");
+        toast.error(err instanceof Error ? err.message : "CSV 导入失败");
       }
     });
   }
 
   function generateAiReport(days: 7 | 30) {
-    setAiReportMessage("");
     startTransition(async () => {
       try {
         const response = await fetch("/api/ai/report", {
@@ -388,8 +407,9 @@ export function WeightDashboard({ entries, stats, user, error }: Props) {
           throw new Error(payload.message ?? "AI 复盘生成失败");
         }
         setAiReport(payload.report);
+        toast.success("AI 复盘已生成。");
       } catch (err) {
-        setAiReportMessage(err instanceof Error ? err.message : "AI 复盘生成失败");
+        toast.error(err instanceof Error ? err.message : "AI 复盘生成失败");
       }
     });
   }
@@ -507,16 +527,6 @@ export function WeightDashboard({ entries, stats, user, error }: Props) {
                     onChange={(event) => setForm({ ...form, note: event.target.value })}
                   />
                 </div>
-                {message ? (
-                  <p className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
-                    {message}
-                  </p>
-                ) : null}
-                {offlineMessage ? (
-                  <p className="rounded-md border px-3 py-2 text-sm text-muted-foreground">
-                    {offlineMessage}
-                  </p>
-                ) : null}
                 <Button className="w-full" disabled={isPending}>
                   {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
                   保存记录
@@ -543,11 +553,6 @@ export function WeightDashboard({ entries, stats, user, error }: Props) {
                   placeholder="例如：今天早上 72.4，跑步后测的"
                   required
                 />
-                {naturalMessage ? (
-                  <p className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
-                    {naturalMessage}
-                  </p>
-                ) : null}
                 <Button className="w-full" disabled={isPending || !naturalText.trim()}>
                   {isPending ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
@@ -643,12 +648,10 @@ export function WeightDashboard({ entries, stats, user, error }: Props) {
                       <YAxis
                         tickLine={false}
                         axisLine={false}
-                        domain={[
-                          (dataMin: number) => Math.floor(dataMin - 1),
-                          (dataMax: number) => Math.ceil(dataMax + 1),
-                        ]}
+                        domain={yAxis.domain}
+                        ticks={yAxis.ticks}
                         allowDecimals={false}
-                        width={36}
+                        width={40}
                         tickFormatter={(value) => `${value}`}
                       />
                       <Tooltip
@@ -816,11 +819,6 @@ export function WeightDashboard({ entries, stats, user, error }: Props) {
                       }
                     />
                   </div>
-                  {profileMessage ? (
-                    <p className="rounded-md border px-3 py-2 text-sm text-muted-foreground">
-                      {profileMessage}
-                    </p>
-                  ) : null}
                   <Button className="w-full" disabled={isPending}>
                     {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <User className="h-4 w-4" />}
                     保存资料
@@ -862,11 +860,6 @@ export function WeightDashboard({ entries, stats, user, error }: Props) {
                     onChange={importCsv}
                   />
                 </div>
-                {csvMessage ? (
-                  <p className="rounded-md border px-3 py-2 text-sm text-muted-foreground">
-                    {csvMessage}
-                  </p>
-                ) : null}
               </CardContent>
             </Card>
 
@@ -901,11 +894,6 @@ export function WeightDashboard({ entries, stats, user, error }: Props) {
                     生成月报
                   </Button>
                 </div>
-                {aiReportMessage ? (
-                  <p className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
-                    {aiReportMessage}
-                  </p>
-                ) : null}
                 {aiReport ? (
                   <div className="whitespace-pre-wrap rounded-md border bg-muted px-3 py-3 text-sm leading-6">
                     {aiReport}
