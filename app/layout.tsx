@@ -17,6 +17,13 @@ export const metadata: Metadata = {
   title: "体重记录",
   description: "响应式体重记录与趋势可视化网站。",
   manifest: "/manifest.json",
+  icons: {
+    icon: [
+      { url: "/favicon.svg", type: "image/svg+xml" },
+      { url: "/icons/icon.svg", type: "image/svg+xml" },
+    ],
+    apple: "/icons/icon.svg",
+  },
   appleWebApp: {
     capable: true,
     title: "体重记录",

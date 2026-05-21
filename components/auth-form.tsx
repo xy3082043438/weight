@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Activity, Loader2, LogIn, UserPlus } from "lucide-react";
+import { Loader2, LogIn, UserPlus } from "lucide-react";
+import { SheepMark } from "@/components/sheep-mark";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -12,7 +13,6 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
 
 export function AuthForm({ error }: { error?: string }) {
   const [mode, setMode] = useState<"login" | "register">("login");
@@ -51,10 +51,9 @@ export function AuthForm({ error }: { error?: string }) {
     <main className="flex min-h-screen items-center justify-center px-4 py-8">
       <div className="w-full max-w-md space-y-4">
         <div className="space-y-3 text-center">
-          <Badge variant="secondary" className="mx-auto gap-1.5">
-            <Activity className="h-3.5 w-3.5" />
-            体重记录
-          </Badge>
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-sm">
+            <SheepMark className="h-9 w-9 text-primary-foreground" />
+          </div>
           <div>
             <h1 className="text-2xl font-semibold tracking-normal">体重记录</h1>
             <p className="mt-2 text-sm text-muted-foreground">

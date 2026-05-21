@@ -1,7 +1,27 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <rect width="512" height="512" rx="96" fill="#0f766e"/>
-  <circle cx="256" cy="232" r="148" fill="#f4f8fb"/>
-  <path d="M166 230a90 90 0 0 1 180 0" fill="none" stroke="#0f766e" stroke-width="32" stroke-linecap="round"/>
-  <path d="M256 225l58-64" fill="none" stroke="#f59e0b" stroke-width="28" stroke-linecap="round"/>
-  <rect x="144" y="330" width="224" height="44" rx="22" fill="#f4f8fb"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="体重记录 · xylamb">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#15897f"/>
+      <stop offset="1" stop-color="#0f766e"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
+  <!-- 小羊 xylamb，缩放自 64 视图 -->
+  <g transform="translate(96,104) scale(5)" fill="none" stroke="#f4f8fb"
+     stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+    <!-- 蓬松羊毛 -->
+    <path d="M19 30a6 6 0 0 1-1-11.8A6 6 0 0 1 29 14.5a6.5 6.5 0 0 1 11 .5a6 6 0 0 1 6 11"/>
+    <!-- 脸 -->
+    <path d="M23 30a9 8 0 0 0 18 0a9 8 0 0 0-18 0Z" fill="#f4f8fb" fill-opacity="0.12"/>
+    <!-- 耳朵 -->
+    <path d="M23.5 30c-3.2 0-5.5 1.6-6 4M40.5 30c3.2 0 5.5 1.6 6 4"/>
+    <!-- 眼睛 -->
+    <path d="M29 30h.02M35 30h.02"/>
+    <!-- 微笑 -->
+    <path d="M29.8 34c1.4 1.2 3 1.2 4.4 0"/>
+    <!-- 四条腿带蹄 -->
+    <path d="M27 40v5l1.8 .6M31.5 40v5M36.5 40v5M41 40v5l-1.8 .6"/>
+  </g>
+  <!-- 体重秤底座，呼应称重主题 -->
+  <rect x="150" y="402" width="212" height="40" rx="20" fill="#f59e0b"/>
 </svg>

@@ -36,7 +36,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
 import { SheepMark } from "@/components/sheep-mark";
 import { WeightOcrButton } from "@/components/weight-ocr-button";
 import { AiChatWidget } from "@/components/ai-chat-widget";
@@ -399,11 +398,10 @@ export function WeightDashboard({ entries, stats, user, error }: Props) {
       <section className="border-b bg-card/70 backdrop-blur-sm">
         <div className="mx-auto flex w-full max-w-7xl flex-col gap-5 px-4 py-5 sm:px-6 lg:px-8">
           <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-            <div className="space-y-2">
-              <Badge variant="secondary" className="w-fit gap-1.5">
-                <Scale className="h-3.5 w-3.5" />
-                体重记录
-              </Badge>
+            <div className="flex items-center gap-3">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm">
+                <SheepMark className="h-8 w-8 text-primary-foreground" />
+              </div>
               <div>
                 <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
                   体重记录
