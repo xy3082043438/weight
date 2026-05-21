@@ -21,7 +21,7 @@ export const pool =
     port: Number(process.env.PGPORT ?? 5432),
     user: process.env.PGUSER ?? process.env.POSTGRES_USER ?? "postgres",
     password: process.env.PG_PASSWORD ?? process.env.PGPASSWORD,
-    database: process.env.PGDATABASE ?? "weight",
+    database: process.env.PGDATABASE ?? "weight_tmp",
     ssl,
     max: Number(process.env.PG_POOL_MAX ?? 5),
     connectionTimeoutMillis: 3000,
