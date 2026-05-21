@@ -7,14 +7,6 @@ export const dynamic = "force-dynamic";
 const registerSchema = z.object({
   account: z.string().trim().min(3).max(40).regex(/^[a-zA-Z0-9_]+$/),
   password: z.string().min(6).max(100),
-  heightCm: z
-    .union([z.coerce.number().min(50).max(260), z.literal(""), z.null()])
-    .optional()
-    .transform((value) => (value === "" || value === undefined ? null : value)),
-  targetWeightKg: z
-    .union([z.coerce.number().positive().max(500), z.literal(""), z.null()])
-    .optional()
-    .transform((value) => (value === "" || value === undefined ? null : value)),
 });
 
 export async function POST(request: Request) {

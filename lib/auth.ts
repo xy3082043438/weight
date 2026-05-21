@@ -57,24 +57,16 @@ async function createSession(userId: number) {
 export async function registerUser(input: {
   account: string;
   password: string;
-  heightCm?: number | null;
-  targetWeightKg?: number | null;
 }) {
   await ensureSchema();
   const passwordHash = await hashPassword(input.password);
   const result = await pool.query(
     `
-      INSERT INTO users (name, account, height_cm, target_weight_kg, password_hash)
-      VALUES ($1, LOWER($2), $3, $4, $5)
+      INSERT INTO users (name, account, password_hash)
+      VALUES ($1, LOWER($2), $3)
       RETURNING id, account, height_cm, target_weight_kg
     `,
-    [
-      input.account,
-      input.account,
-      input.heightCm ?? null,
-      input.targetWeightKg ?? null,
-      passwordHash,
-    ],
+    [input.account, input.account, passwordHash],
   );
 
   const user = mapAuthUser(result.rows[0]);
