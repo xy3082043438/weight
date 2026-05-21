@@ -75,9 +75,9 @@ export function AiChatWidget() {
           type="button"
           onClick={() => setOpen(true)}
           aria-label="打开 AI 小羊助手"
-          className="fixed bottom-5 right-5 z-50 flex h-14 w-14 items-center justify-center rounded-full border bg-card text-primary shadow-lg transition hover:scale-105"
+          className="fixed bottom-5 right-5 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition hover:scale-105"
         >
-          <SheepMark className="h-9 w-9 text-primary" />
+          <SheepMark className="h-9 w-9 text-primary-foreground" />
         </button>
       ) : (
         <div className="fixed bottom-5 right-5 z-50 flex h-[70vh] max-h-[560px] w-[min(92vw,380px)] flex-col overflow-hidden rounded-xl border bg-card shadow-2xl">
@@ -135,7 +135,7 @@ export function AiChatWidget() {
                 onChange={(event) => setInput(event.target.value)}
                 onKeyDown={onKeyDown}
                 rows={1}
-                placeholder="问问小羊，例如：最近是不是平台期了？"
+                placeholder="问问小羊，如：这个月趋势怎么样？"
                 className="min-h-[40px] resize-none"
               />
               <Button

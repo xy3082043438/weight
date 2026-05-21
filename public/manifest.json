@@ -1,6 +1,6 @@
 {
-  "name": "体重记录",
-  "short_name": "体重记录",
+  "name": "小羊体重",
+  "short_name": "小羊体重",
   "description": "每日体重记录、趋势分析和目标管理。",
   "start_url": "/",
   "scope": "/",
@@ -13,7 +13,7 @@
       "src": "/icons/icon.svg",
       "sizes": "any",
       "type": "image/svg+xml",
-      "purpose": "any maskable"
+      "purpose": "any"
     }
   ]
 }

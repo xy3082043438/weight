@@ -11,6 +11,7 @@ import {
   LineChartIcon,
   Loader2,
   LogOut,
+  Mail,
   Plus,
   Scale,
   Settings2,
@@ -279,7 +280,7 @@ export function WeightDashboard({ entries, stats, user, error }: Props) {
         setNaturalText("");
         toast.success("已记录。");
       } catch (err) {
-        toast.error(err instanceof Error ? err.message : "口语录入失败");
+        toast.error(err instanceof Error ? err.message : "记录失败");
       }
     });
   }
@@ -426,7 +427,7 @@ export function WeightDashboard({ entries, stats, user, error }: Props) {
               </div>
               <div>
                 <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
-                  体重记录
+                  小羊体重
                 </h1>
                 <p className="mt-2 max-w-2xl text-sm text-muted-foreground sm:text-base">
                   记录每日体重，查看趋势、波动区间和近期变化。
@@ -539,10 +540,10 @@ export function WeightDashboard({ entries, stats, user, error }: Props) {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Sparkles className="h-4 w-4 text-accent" />
-                口语录入
+                一句话记录
               </CardTitle>
               <CardDescription>
-                直接输入一句话，AI 会识别日期、体重和备注。
+                直接输入一句话，AI 会识别日期、体重和备注；不写日期就记到今天。
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -908,6 +909,17 @@ export function WeightDashboard({ entries, stats, user, error }: Props) {
           </div>
         ) : null}
       </section>
+
+      <footer className="mx-auto mt-8 flex w-full max-w-7xl flex-wrap items-center justify-center gap-1 px-4 pb-2 text-xs text-muted-foreground sm:px-6 lg:px-8">
+        <span>有问题或建议？欢迎</span>
+        <a
+          href="mailto:xy3082043438@qq.com?subject=小羊体重反馈"
+          className="inline-flex items-center gap-1 font-medium text-primary underline-offset-4 hover:underline"
+        >
+          <Mail className="h-3.5 w-3.5" />
+          邮件反馈
+        </a>
+      </footer>
 
       <AiChatWidget />
     </main>

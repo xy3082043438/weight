@@ -15,8 +15,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "体重记录",
-  description: "响应式体重记录与趋势可视化网站。",
+  title: "小羊体重",
+  description: "小羊体重 —— 响应式体重记录与趋势可视化网站。",
   manifest: "/manifest.json",
   icons: {
     icon: [
@@ -27,7 +27,7 @@ export const metadata: Metadata = {
   },
   appleWebApp: {
     capable: true,
-    title: "体重记录",
+    title: "小羊体重",
     statusBarStyle: "default",
   },
 };

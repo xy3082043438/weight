@@ -8,7 +8,9 @@ import {
 } from "@/lib/weight";
 import { getCurrentUser } from "@/lib/auth";
 import {
+  findPreviousEntry,
   getAbnormalWeightWarning,
+  getImplausibleBmiWarning,
   maxWeightKg,
   minWeightKg,
 } from "@/lib/weight-validation";
@@ -61,12 +63,22 @@ export async function POST(request: Request) {
       measuredAt: parsed.measuredAt,
       weightKg: parsed.weightKg,
     });
-    if (warning && !parsed.confirmAbnormal) {
+    // 仅当没有更早记录可比对时，才用身高 BMI 兜底，避免对体重本就偏高的老用户重复打扰。
+    const bmiWarning =
+      warning || findPreviousEntry(existingEntries, parsed.measuredAt)
+        ? null
+        : getImplausibleBmiWarning({
+            weightKg: parsed.weightKg,
+            heightCm: user.heightCm,
+          });
+    if ((warning || bmiWarning) && !parsed.confirmAbnormal) {
       return NextResponse.json(
         {
-          code: "ABNORMAL_WEIGHT_DELTA",
-          message: `本次体重比上次记录变化 ${Math.abs(warning.delta).toFixed(1)} kg，请确认输入无误。`,
-          warning,
+          code: warning ? "ABNORMAL_WEIGHT_DELTA" : "IMPLAUSIBLE_BMI",
+          message: warning
+            ? `本次体重比上次记录变化 ${Math.abs(warning.delta).toFixed(1)} kg，请确认输入无误。`
+            : `当前体重对应 BMI 约 ${bmiWarning!.bmi}，明显偏离正常范围，请确认输入无误。`,
+          warning: warning ?? bmiWarning,
         },
         { status: 409 },
       );

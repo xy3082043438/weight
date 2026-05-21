@@ -14,7 +14,7 @@ export async function checkDailyRateLimit(input: {
       DO UPDATE SET count = ai_rate_limits.count + 1
       RETURNING count
     `,
-    [input.userId, input.key, input.limit],
+    [input.userId, input.key],
   );
 
   const count = Number(result.rows[0]?.count ?? 0);

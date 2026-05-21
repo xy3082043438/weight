@@ -4,7 +4,9 @@ import { createAiChatCompletion } from "@/lib/ai";
 import { getCurrentUser } from "@/lib/auth";
 import { getWeightStats, listWeightEntries, upsertWeightEntry } from "@/lib/weight";
 import {
+  findPreviousEntry,
   getAbnormalWeightWarning,
+  getImplausibleBmiWarning,
   maxWeightKg,
   minWeightKg,
 } from "@/lib/weight-validation";
@@ -58,7 +60,7 @@ export async function POST(request: Request) {
         role: "system",
         content: [
           "你是体重记录解析器，只输出 JSON，不要输出解释。",
-          "从用户的中文口语输入中提取体重记录。",
+          "从用户的中文自然语言输入中提取体重记录。",
           "返回格式必须是：{\"measuredAt\":\"YYYY-MM-DD\",\"weightKg\":72.4,\"note\":\"备注或null\"}",
           "日期缺省时使用当前日期。今天、昨天、前天等相对日期以 Asia/Shanghai 当前日期为准。",
           "体重单位默认 kg。",
@@ -113,12 +115,22 @@ export async function POST(request: Request) {
       measuredAt: entryInput.measuredAt,
       weightKg: entryInput.weightKg,
     });
-    if (warning && !confirmAbnormal) {
+    // 仅当没有更早记录可比对时，才用身高 BMI 兜底，避免对体重本就偏高的老用户重复打扰。
+    const bmiWarning =
+      warning || findPreviousEntry(existingEntries, entryInput.measuredAt)
+        ? null
+        : getImplausibleBmiWarning({
+            weightKg: entryInput.weightKg,
+            heightCm: user.heightCm,
+          });
+    if ((warning || bmiWarning) && !confirmAbnormal) {
       return NextResponse.json(
         {
-          code: "ABNORMAL_WEIGHT_DELTA",
-          message: `本次体重比上次记录变化 ${Math.abs(warning.delta).toFixed(1)} kg，请确认输入无误。`,
-          warning,
+          code: warning ? "ABNORMAL_WEIGHT_DELTA" : "IMPLAUSIBLE_BMI",
+          message: warning
+            ? `本次体重比上次记录变化 ${Math.abs(warning.delta).toFixed(1)} kg，请确认输入无误。`
+            : `当前体重对应 BMI 约 ${bmiWarning!.bmi}，明显偏离正常范围，请确认输入无误。`,
+          warning: warning ?? bmiWarning,
           parsed: entryInput,
         },
         { status: 409 },
@@ -144,7 +156,7 @@ export async function POST(request: Request) {
     const message =
       error instanceof Error && error.message === "Missing SILICONFLOW_API_KEY"
         ? "缺少 SILICONFLOW_API_KEY 环境变量。"
-        : "口语录入解析失败，请稍后重试。";
+        : "解析失败，请稍后重试。";
 
     return NextResponse.json({ message }, { status: 400 });
   }

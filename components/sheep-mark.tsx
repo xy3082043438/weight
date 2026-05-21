@@ -6,7 +6,7 @@ type SheepMarkProps = {
  * 治愈系小羊「xylamb」品牌符号。
  * 用于空状态插画与 AI 助手头像，统一这个体重看板的视觉印记。
  */
-export function SheepMark({ className = "h-12 w-12 text-muted-foreground" }: SheepMarkProps) {
+export function SheepMark({ className = "h-12 w-12 text-primary" }: SheepMarkProps) {
   return (
     <svg
       className={className}
