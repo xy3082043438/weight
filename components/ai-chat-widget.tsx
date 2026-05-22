@@ -23,6 +23,7 @@ export function AiChatWidget() {
   const [messages, setMessages] = useState<ChatMessage[]>([greeting]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [streaming, setStreaming] = useState(false);
   const [error, setError] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -47,18 +48,81 @@ export function AiChatWidget() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: text }),
       });
-      const payload = await response.json();
-      if (!response.ok) {
-        throw new Error(payload.message ?? "AI 请求失败。");
+
+      if (!response.ok || !response.body) {
+        const payload = await response.json().catch(() => null);
+        throw new Error(payload?.message ?? "AI 请求失败。");
       }
-      setMessages((current) => [
-        ...current,
-        { role: "assistant", content: payload.reply || "（小羊暂时没有想法）" },
-      ]);
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+      let acc = "";
+      let started = false;
+      let streamError = "";
+
+      const pushDelta = (delta: string) => {
+        acc += delta;
+        if (!started) {
+          started = true;
+          setStreaming(true);
+          setMessages((current) => [...current, { role: "assistant", content: acc }]);
+        } else {
+          setMessages((current) => {
+            const next = [...current];
+            next[next.length - 1] = { role: "assistant", content: acc };
+            return next;
+          });
+        }
+      };
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) {
+          break;
+        }
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() ?? "";
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (!trimmed.startsWith("data:")) {
+            continue;
+          }
+          const data = trimmed.slice(5).trim();
+          if (!data) {
+            continue;
+          }
+          try {
+            const event = JSON.parse(data) as {
+              delta?: string;
+              error?: string;
+            };
+            if (event.delta) {
+              pushDelta(event.delta);
+            } else if (event.error) {
+              streamError = event.error;
+            }
+          } catch {
+            // 忽略无法解析的行
+          }
+        }
+      }
+
+      if (streamError) {
+        // 已出的部分内容保留在气泡里，错误另行提示
+        setError(streamError);
+      } else if (!started) {
+        setMessages((current) => [
+          ...current,
+          { role: "assistant", content: "（小羊暂时没有想法）" },
+        ]);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "AI 请求失败。");
     } finally {
       setLoading(false);
+      setStreaming(false);
     }
   }
 
@@ -123,7 +187,7 @@ export function AiChatWidget() {
                 )}
               </div>
             ))}
-            {loading ? (
+            {loading && !streaming ? (
               <div className="flex justify-start">
                 <div className="rounded-lg bg-muted px-3 py-2 text-sm text-muted-foreground">
                   <Loader2 className="h-4 w-4 animate-spin" />
