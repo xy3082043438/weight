@@ -5,6 +5,9 @@ node_modules
 .next
 out
 
+# typescript 增量编译缓存
+*.tsbuildinfo
+
 # production
 build
 
