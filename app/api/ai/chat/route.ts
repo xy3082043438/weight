@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { streamAiChatCompletion, type ChatMessage } from "@/lib/ai";
+import { aiErrorToMessage, streamAiChatCompletion, type ChatMessage } from "@/lib/ai";
 import { getCurrentUser } from "@/lib/auth";
 import { buildWeightContext } from "@/lib/ai-analysis";
 import { checkDailyRateLimit } from "@/lib/rate-limit";
@@ -71,12 +71,7 @@ export async function POST(request: Request) {
         send({ done: true });
       } catch (error) {
         console.error(error);
-        const message =
-          error instanceof Error &&
-          error.message === "Missing SILICONFLOW_API_KEY"
-            ? "缺少 SILICONFLOW_API_KEY 环境变量。"
-            : "AI 请求失败。";
-        send({ error: message });
+        send({ error: aiErrorToMessage(error, "AI 请求失败。") });
       } finally {
         controller.close();
       }

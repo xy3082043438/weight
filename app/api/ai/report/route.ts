@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { createAiChatCompletion } from "@/lib/ai";
+import { aiErrorToMessage, createAiChatCompletion } from "@/lib/ai";
 import { buildReportPrompt, filterEntriesByDays } from "@/lib/ai-analysis";
 import { getCurrentUser } from "@/lib/auth";
 import { listWeightEntries } from "@/lib/weight";
@@ -44,11 +44,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ report });
   } catch (error) {
     console.error(error);
-    const message =
-      error instanceof Error && error.message === "Missing SILICONFLOW_API_KEY"
-        ? "缺少 SILICONFLOW_API_KEY 环境变量。"
-        : "AI 复盘生成失败。";
-
-    return NextResponse.json({ message }, { status: 400 });
+    return NextResponse.json(
+      { message: aiErrorToMessage(error, "AI 复盘生成失败。") },
+      { status: 400 },
+    );
   }
 }

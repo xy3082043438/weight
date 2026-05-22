@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { createAiChatCompletion } from "@/lib/ai";
+import { aiErrorToMessage, createAiChatCompletion } from "@/lib/ai";
 import { getCurrentUser } from "@/lib/auth";
 import { getWeightStats, listWeightEntries, upsertWeightEntry } from "@/lib/weight";
 import {
@@ -153,11 +153,9 @@ export async function POST(request: Request) {
     });
   } catch (error) {
     console.error(error);
-    const message =
-      error instanceof Error && error.message === "Missing SILICONFLOW_API_KEY"
-        ? "缺少 SILICONFLOW_API_KEY 环境变量。"
-        : "解析失败，请稍后重试。";
-
-    return NextResponse.json({ message }, { status: 400 });
+    return NextResponse.json(
+      { message: aiErrorToMessage(error, "解析失败，请稍后重试。") },
+      { status: 400 },
+    );
   }
 }

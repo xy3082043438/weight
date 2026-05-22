@@ -1,6 +1,21 @@
 const siliconFlowApiUrl = "https://api.siliconflow.cn/v1/chat/completions";
 const defaultModel = "deepseek-ai/DeepSeek-V3.2";
 
+export class MissingApiKeyError extends Error {
+  constructor() {
+    super("Missing SILICONFLOW_API_KEY");
+    this.name = "MissingApiKeyError";
+  }
+}
+
+// 把 AI 调用抛出的错误映射成给用户看的中文文案，避免各路由各自字符串匹配。
+export function aiErrorToMessage(error: unknown, fallback: string) {
+  if (error instanceof MissingApiKeyError) {
+    return "缺少 SILICONFLOW_API_KEY 环境变量。";
+  }
+  return fallback;
+}
+
 type TextContent = {
   type: "text";
   text: string;
@@ -33,7 +48,7 @@ export async function createAiChatCompletion(
 ) {
   const apiKey = process.env.SILICONFLOW_API_KEY;
   if (!apiKey) {
-    throw new Error("Missing SILICONFLOW_API_KEY");
+    throw new MissingApiKeyError();
   }
 
   const response = await fetch(siliconFlowApiUrl, {
@@ -71,7 +86,7 @@ export async function* streamAiChatCompletion(
 ): AsyncGenerator<string, void, unknown> {
   const apiKey = process.env.SILICONFLOW_API_KEY;
   if (!apiKey) {
-    throw new Error("Missing SILICONFLOW_API_KEY");
+    throw new MissingApiKeyError();
   }
 
   const response = await fetch(siliconFlowApiUrl, {
