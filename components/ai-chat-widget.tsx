@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import ReactMarkdown from "react-markdown";
 import { Loader2, Send, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -103,15 +104,23 @@ export function AiChatWidget() {
                 key={index}
                 className={message.role === "user" ? "flex justify-end" : "flex justify-start"}
               >
-                <div
-                  className={
-                    message.role === "user"
-                      ? "max-w-[80%] whitespace-pre-wrap rounded-lg bg-primary px-3 py-2 text-sm text-primary-foreground"
-                      : "max-w-[80%] whitespace-pre-wrap rounded-lg bg-muted px-3 py-2 text-sm leading-6"
-                  }
-                >
-                  {message.content}
-                </div>
+                {message.role === "user" ? (
+                  <div className="max-w-[80%] whitespace-pre-wrap rounded-lg bg-primary px-3 py-2 text-sm text-primary-foreground">
+                    {message.content}
+                  </div>
+                ) : (
+                  <div className="max-w-[80%] space-y-2 rounded-lg bg-muted px-3 py-2 text-sm leading-6 [&_a]:underline [&_code]:rounded [&_code]:bg-background/60 [&_code]:px-1 [&_li]:my-0.5 [&_ol]:list-decimal [&_ol]:pl-5 [&_strong]:font-semibold [&_ul]:list-disc [&_ul]:pl-5">
+                    <ReactMarkdown
+                      components={{
+                        a: ({ node: _node, ...props }) => (
+                          <a {...props} target="_blank" rel="noreferrer" />
+                        ),
+                      }}
+                    >
+                      {message.content}
+                    </ReactMarkdown>
+                  </div>
+                )}
               </div>
             ))}
             {loading ? (
