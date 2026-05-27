@@ -130,6 +130,7 @@ export function WeightDashboard({ entries, stats, user, error }: Props) {
   const [naturalText, setNaturalText] = useState("");
   const [aiReport, setAiReport] = useState("");
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [showAllEntries, setShowAllEntries] = useState(false);
   const [isPending, startTransition] = useTransition();
   const weightInputRef = useRef<HTMLInputElement>(null);
   const toast = useToast();
@@ -700,33 +701,62 @@ export function WeightDashboard({ entries, stats, user, error }: Props) {
               <CardDescription>移动端按卡片展示，桌面端保持紧凑列表。</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-2">
+              <div
+                className={cn(
+                  "space-y-2",
+                  recentEntries.length > 8 && "lg:max-h-[480px] lg:overflow-y-auto lg:pr-2",
+                )}
+              >
                 {recentEntries.length > 0 ? (
-                  recentEntries.map((entry) => (
-                    <div
-                      key={entry.id}
-                      className="grid gap-3 rounded-lg border p-3 transition-colors hover:bg-muted/50 sm:grid-cols-[120px_1fr_1fr_auto] sm:items-center"
-                    >
-                      <div className="text-sm font-medium">{entry.measuredAt}</div>
-                      <div className="flex items-baseline gap-2">
-                        <span className="text-lg font-semibold">{entry.weightKg.toFixed(1)}</span>
-                        <span className="text-xs text-muted-foreground">kg</span>
-                      </div>
-                      <div className="text-sm text-muted-foreground">
-                        {entry.note || "无备注"}
-                      </div>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        aria-label="删除记录"
-                        onClick={() => removeEntry(entry.id)}
-                        disabled={isPending}
+                  <>
+                    {recentEntries.map((entry, index) => (
+                      <div
+                        key={entry.id}
+                        className={cn(
+                          "flex flex-wrap items-center gap-x-3 gap-y-1 rounded-lg border px-3 py-2 transition-colors hover:bg-muted/50 sm:grid sm:grid-cols-[120px_1fr_1fr_auto] sm:gap-3 sm:p-3",
+                          index >= 7 && !showAllEntries && "hidden lg:grid",
+                        )}
                       >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  ))
+                        <div className="text-sm font-medium">{entry.measuredAt}</div>
+                        <div className="flex items-baseline gap-1">
+                          <span className="text-base font-semibold sm:text-lg">
+                            {entry.weightKg.toFixed(1)}
+                          </span>
+                          <span className="text-xs text-muted-foreground">kg</span>
+                        </div>
+                        <div
+                          className={cn(
+                            "order-last w-full text-xs text-muted-foreground sm:order-none sm:w-auto sm:text-sm",
+                            !entry.note && "hidden sm:block",
+                          )}
+                        >
+                          {entry.note || "无备注"}
+                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          aria-label="删除记录"
+                          onClick={() => removeEntry(entry.id)}
+                          disabled={isPending}
+                          className="ml-auto h-8 w-8 sm:ml-0 sm:h-10 sm:w-10"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                    {recentEntries.length > 7 ? (
+                      <button
+                        type="button"
+                        onClick={() => setShowAllEntries((open) => !open)}
+                        className="block w-full rounded-lg border border-dashed py-2 text-sm text-muted-foreground transition-colors hover:bg-muted/50 lg:hidden"
+                      >
+                        {showAllEntries
+                          ? "收起"
+                          : `展开全部（剩余 ${recentEntries.length - 7} 条）`}
+                      </button>
+                    ) : null}
+                  </>
                 ) : (
                   <div className="flex flex-col items-center gap-3 rounded-md border border-dashed p-6 text-center text-sm text-muted-foreground">
                     <SheepMark />
